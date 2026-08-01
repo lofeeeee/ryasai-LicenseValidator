@@ -449,9 +449,14 @@
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-ink-muted mb-1.5">Product / App *</label>
-                        <input required value={form.product} onChange={e => setForm({...form, product: e.target.value})}
-                            className={inputClass} placeholder="e.g. d2t, peopledet, myapp" />
-                        <p className="text-[11px] text-ink-tertiary mt-1">App identifier — used as license key prefix</p>
+                        <select required value={form.product} onChange={e => setForm({...form, product: e.target.value})}
+                            className={inputClass}>
+                            <option value="">Select an app...</option>
+                            <option value="ryasai-chatbot">ryasai-chatbot (Chatbot)</option>
+                            <option value="d2t">d2t (D2T — Document to Text)</option>
+                            <option value="peopledet">peopledet (PeopleDet)</option>
+                        </select>
+                        <p className="text-[11px] text-ink-tertiary mt-1">Must match the app's LICENSE_PRODUCT env var</p>
                     </div>
                     <div className="grid grid-cols-3 gap-4">
                         <div>
