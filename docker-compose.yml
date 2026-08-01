@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  license-server:
+    build: .
+    ports:
+      - "9000:9000"
+    env_file:
+      - .env
+    volumes:
+      - license-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  license-data:
