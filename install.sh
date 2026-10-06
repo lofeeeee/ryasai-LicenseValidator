@@ -26,14 +26,26 @@ else
   echo "==> Creating .env"
   secret() { node -e 'console.log(require("crypto").randomBytes(32).toString("hex"))'; }
   cat > .env <<EOF
+# Shared with the apps that send signed requests (license renewal from the chat app)
 SECRET_KEY=$(secret)
 JWT_SECRET=$(secret)
 JWT_EXPIRE_HOURS=24
+# The only email the first-time setup accepts
 ADMIN_EMAIL=admin@ryasai.com
 DATABASE_URL=./data/license.db
 
 # Comma-separated additional origins
 CORS_ORIGINS=
+
+# Reverse proxies (nginx, Caddy, ...) in front of this server. 0 = clients connect directly.
+# Behind one proxy this must be 1, or every client is seen as the proxy's address.
+TRUSTED_PROXY_HOPS=0
+
+# An active machine not seen for this many days gives its slot back. 0 = never.
+MACHINE_STALE_DAYS=30
+
+# Validation logs older than this many days are deleted. 0 = keep forever.
+LOG_RETENTION_DAYS=0
 
 # Ed25519 private key (PKCS8 DER, hex) used to sign validation responses.
 # Must match the public key shipped in the client apps, so it is not generated here.
