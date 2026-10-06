@@ -9,7 +9,7 @@ import { flushSync } from 'react-dom'
 import { admin, TokenStore, unwrap, type LoginResult } from '@/lib/api'
 import { isDesktop } from '@/lib/motion'
 import { LoginPage } from './LoginPage'
-import { Icons, Logo, Spinner, ThemeToggle, Toast, type ToastType } from './ui'
+import { Icons, Logo, ThemeToggle, Toast, type ToastType } from './ui'
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
@@ -23,6 +23,7 @@ const navItems = [
   { href: '/', label: 'Dashboard', short: 'Dashboard', icon: <Icons.Dashboard /> },
   { href: '/licenses', label: 'Licenses', short: 'Licenses', icon: <Icons.Key /> },
   { href: '/logs', label: 'Validation Logs', short: 'Logs', icon: <Icons.Activity /> },
+  { href: '/docs', label: 'API Docs', short: 'Docs', icon: <Icons.Code /> },
 ]
 
 function AdminPanel({ user, onLogout, children }: { user: User | null; onLogout: () => void; children: ReactNode }) {
@@ -55,7 +56,7 @@ function AdminPanel({ user, onLogout, children }: { user: User | null; onLogout:
   }, [pathname])
 
   return (
-    <div className="flex flex-col md:flex-row h-[100dvh] bg-surface-0">
+    <div className="flex flex-col md:flex-row h-[100dvh] bg-surface-0 screen-fade-in">
       {/* Top bar (phones) */}
       <header className="md:hidden flex items-center justify-between gap-3 px-4 py-2.5 bg-surface-1 border-b border-hairline">
         <div className="flex items-center gap-2.5 min-w-0">
@@ -113,10 +114,6 @@ function AdminPanel({ user, onLogout, children }: { user: User | null; onLogout:
               </div>
               <div className="min-w-0">
                 <p className="text-xs text-ink truncate">{user?.email || 'Admin'}</p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 pulse-dot"></div>
-                  <span className="text-[10px] text-ink-subtle">Online</span>
-                </div>
               </div>
             </div>
             <div className="flex items-center flex-shrink-0">
@@ -140,7 +137,7 @@ function AdminPanel({ user, onLogout, children }: { user: User | null; onLogout:
       </main>
 
       {/* Tab bar (phones) */}
-      <nav className="md:hidden grid grid-cols-3 bg-surface-1 border-t border-hairline pb-[env(safe-area-inset-bottom)]">
+      <nav className="md:hidden grid grid-cols-4 bg-surface-1 border-t border-hairline pb-[env(safe-area-inset-bottom)]">
         {navItems.map(item => {
           const active = pathname === item.href
           return (
@@ -219,17 +216,8 @@ export default function App({ children }: { children: ReactNode }) {
 
   const veil = <div ref={veilRef} aria-hidden="true" className="fixed inset-0 z-[60] bg-white pointer-events-none opacity-0"></div>
 
-  // Loading state while verifying token
-  if (verifying) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-surface-0">
-        <div className="text-center fade-in">
-          <Spinner size="w-6 h-6" color="text-brand-500" />
-          <p className="text-xs text-ink-subtle mt-3">Verifying session...</p>
-        </div>
-      </div>
-    )
-  }
+  // Nothing is drawn while the token is verified; the screen then fades in
+  if (verifying) return null
 
   if (!authenticated) {
     return <>{veil}<LoginPage onLogin={handleLogin} onReady={() => loginReady.current?.()} /></>

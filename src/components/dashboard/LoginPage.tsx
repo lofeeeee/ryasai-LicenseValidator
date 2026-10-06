@@ -247,13 +247,8 @@ export function LoginPage({ onLogin, onReady }: {
       .finally(() => setLeaving(null))
   }
 
-  if (mode === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f7f8fd] to-[#e8ebf8] dark:from-[#191d2f] dark:to-[#121522]">
-        <Spinner size="w-6 h-6" color="text-brand-500" />
-      </div>
-    )
-  }
+  // Nothing is drawn until the setup status is known; the screen then fades in
+  if (mode === 'loading') return null
 
   const isSetup = mode === 'setup'
   const form: LoginForm = {
@@ -263,7 +258,7 @@ export function LoginPage({ onLogin, onReady }: {
   }
 
   return (
-    <div className="relative h-screen overflow-hidden">
+    <div className="relative h-screen overflow-hidden screen-fade-in">
       {THEMES.map(layerTheme => (
         <LoginLayer key={layerTheme} theme={layerTheme}
           layerRef={el => { layers.current[layerTheme] = el }}

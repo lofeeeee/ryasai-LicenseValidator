@@ -37,6 +37,8 @@
 /* --font-inter is provided by next/font in app/layout.tsx */
 body { font-family: var(--font-inter), 'Inter', sans-serif; }
 .fade-in { animation: fadeIn 0.3s ease-out; }
+/* Whole-screen entrance (login, admin) after the initial load */
+.screen-fade-in { animation: fadeIn 0.7s ease-out both; }
 .fade-in-up { animation: fadeInUp 0.4s ease-out; }
 .slide-in-right { animation: slideInRight 0.3s ease-out; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
