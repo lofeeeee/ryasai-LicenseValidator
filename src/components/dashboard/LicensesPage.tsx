@@ -7,9 +7,9 @@ import { dayBoundary, formatDate, formatDateTime, toDateInput } from '@/lib/date
 import { useReveal } from '@/lib/motion'
 import { Icons, LicenseStatusBadge, Modal, PlanBadge, Select, Spinner, StatusBadge, type SelectOption } from './ui'
 
-// The product is a label kept for reference: validation no longer checks it
+// A license with a product only validates for that app; None works for any app
 const productOptions: SelectOption[] = [
-  { value: '', label: 'None' },
+  { value: '', label: 'Any app' },
   { value: 'ryasai-chatbot', label: 'ryasai-chatbot (Chatbot)' },
   { value: 'ryasai-visia', label: 'ryasai-visia (Vision Analytics)' },
   { value: 'd2t', label: 'd2t (D2T — Document to Text)' },
@@ -135,7 +135,7 @@ function CreateLicenseForm({ onCreated, onClose, planOptions }: {
           <label className={labelClass}>Product / App</label>
           <Select ariaLabel="Product / App" value={form.product} onChange={product => setForm({...form, product})}
             options={productOptions} className={inputClass} />
-          <p className="text-[11px] text-ink-tertiary mt-1">For reference; sets the key prefix</p>
+          <p className="text-[11px] text-ink-tertiary mt-1">Must match the app's LICENSE_PRODUCT; Any app skips the check</p>
         </div>
         <div>
           <label className={labelClass}>Organisation Slug</label>

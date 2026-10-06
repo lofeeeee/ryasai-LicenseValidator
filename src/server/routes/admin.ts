@@ -158,7 +158,7 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
         customer_name: name,
         customer_email: name,
         plan: t.Optional(t.String({ maxLength: 20 })), // a license_plans code
-        product: t.Optional(t.String({ maxLength: 50 })), // legacy app identifier, not checked on validation
+        product: t.Optional(t.String({ maxLength: 50 })), // app the license is for; omitted or '' = any app
         slug: t.Optional(t.Nullable(t.String({ maxLength: 100 }))),
         max_machines: t.Optional(t.Integer({ minimum: 1, maximum: 100000 })),
         expires_at: t.Optional(t.Nullable(t.String({ maxLength: 40 }))), // ISO format, null = lifetime

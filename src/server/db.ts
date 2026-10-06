@@ -48,7 +48,7 @@ export interface LicenseRow {
   customer_email: string
   plan_code: string // -> license_plans.code
   status_code: string // -> license_statuses.code
-  product: string // legacy app identifier e.g. "ryasai-chatbot"; '' when unset. Not checked on validation.
+  product: string // app identifier e.g. "ryasai-chatbot"; '' = valid for any app
   slug: string | null // downstream organisation slug; renewals are addressed by it
   max_machines: number
   expires_at: string | null // null = lifetime
@@ -253,7 +253,11 @@ INSERT OR IGNORE INTO validation_results (code, name, description, is_success, s
     ('inactive', 'Inactive', 'License is revoked', 0, 30),
     ('expired', 'Expired', 'License is past its expiry date', 0, 40),
     ('machine_limit', 'Machine limit', 'No free machine slot', 0, 50),
-    ('wrong_product', 'Wrong product', 'Legacy: product mismatch, no longer checked', 0, 60);
+    ('wrong_product', 'Wrong product', 'License is for a different product', 0, 60);
+
+-- Wording from when the product check was briefly removed
+UPDATE validation_results SET description = 'License is for a different product'
+WHERE code = 'wrong_product' AND description LIKE 'Legacy:%';
 `
 
 const LEGACY_TABLES = ['licenses', 'machine_activations', 'validation_logs', 'admin_users']

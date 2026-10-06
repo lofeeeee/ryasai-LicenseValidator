@@ -83,7 +83,7 @@ Master rows are inserted with `INSERT OR IGNORE` every time the server starts, s
 | `inactive` | Inactive | 0 | License is revoked |
 | `expired` | Expired | 0 | License is past its expiry date |
 | `machine_limit` | Machine limit | 0 | No free machine slot |
-| `wrong_product` | Wrong product | 0 | Legacy: only on logs written before the product check was removed |
+| `wrong_product` | Wrong product | 0 | The license is for a different product |
 
 ## DDL
 
@@ -136,7 +136,7 @@ CREATE TABLE licenses (
     customer_email VARCHAR(200) NOT NULL,
     plan_code      VARCHAR(20)  NOT NULL DEFAULT 'starter',
     status_code    VARCHAR(20)  NOT NULL DEFAULT 'active',
-    product        VARCHAR(50)  NOT NULL DEFAULT '',      -- legacy app identifier; not checked on validation
+    product        VARCHAR(50)  NOT NULL DEFAULT '',      -- app the license is for; '' = any app          
     slug           VARCHAR(100),                          -- organisation slug downstream; renewals address the license by it
     max_machines   INTEGER      NOT NULL DEFAULT 1 CHECK (max_machines >= 1),
     expires_at     DATETIME,                              -- NULL = lifetime
@@ -237,10 +237,11 @@ A license validates when all of these hold, checked in this order. The first fai
 
 1. The key exists — otherwise `invalid`.
 2. Its status has `allows_validation = 1` — otherwise `inactive`.
-3. `expires_at` is NULL or in the future — otherwise `expired`.
-4. The machine gets a slot — otherwise `machine_limit`.
+3. `licenses.product` is empty, or equals the `product` the client sent — otherwise `wrong_product`.
+4. `expires_at` is NULL or in the future — otherwise `expired`.
+5. The machine gets a slot — otherwise `machine_limit`.
 
-`product` is recorded in `metadata` and is not compared with the license.
+A license with an empty `product` works for any app. What the client sent is also recorded in `metadata`.
 
 ### Machine slots
 
@@ -291,6 +292,6 @@ To add a later change: bump `SCHEMA_VERSION`, add an `if (version < N)` step in 
 | `DATABASE_URL` | `./data/license.db` | Where the database file is |
 | `MACHINE_STALE_DAYS` | `30` | Days without a validation before an active machine becomes `stale`. `0` = never |
 | `LOG_RETENTION_DAYS` | `0` | Validation logs older than this are deleted. `0` = keep forever |
-| `TRUSTED_PROXY_HOPS` | `0` | Reverse proxies in front of the server. Decides which address is stored as `ip_address` |
+| `TRUSTED_PROXY_HOPS` | unset | Decides which address is stored as `ip_address`. Unset = `X-Forwarded-For` is believed only when the connection comes from a local or private address (a reverse proxy). `0` = never believed. `N` = exactly N proxies in front |
 | `ADMIN_EMAIL` | `admin@ryasai.com` | The only email the first-time setup accepts |
 | `SECRET_KEY` | placeholder | Signs renewal requests. Renewal is refused while it is the placeholder |

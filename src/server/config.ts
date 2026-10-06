@@ -9,7 +9,7 @@ function resolveDatabasePath(url: string): string {
 }
 
 /** A whole number >= 0 from the environment, or the fallback when unset or invalid. */
-function count(value: string | undefined, fallback: number): number {
+function count<T extends number | null>(value: string | undefined, fallback: T): number | T {
   const n = Number(value)
   return value !== undefined && value.trim() !== '' && Number.isInteger(n) && n >= 0 ? n : fallback
 }
@@ -37,8 +37,9 @@ export const settings = {
   CORS_ORIGINS: env.CORS_ORIGINS ?? '', // Comma-separated additional origins
 
   // Reverse proxies in front of this server that append to X-Forwarded-For.
-  // 0 = clients connect directly, so the header is ignored and the socket address is used.
-  TRUSTED_PROXY_HOPS: count(env.TRUSTED_PROXY_HOPS, 0),
+  // Unset (null) = detect: the header is believed only when the connection comes from a local proxy.
+  // 0 = clients connect directly, so the header is always ignored and the socket address is used.
+  TRUSTED_PROXY_HOPS: count(env.TRUSTED_PROXY_HOPS, null),
 
   // An active machine not seen for this many days gives its slot back. 0 = never.
   MACHINE_STALE_DAYS: count(env.MACHINE_STALE_DAYS, 30),

@@ -62,7 +62,7 @@ const license = {
 const validateBody: DocField[] = [
   { name: 'license_key', type: 'string', required: true, description: 'The license key issued to the customer. At most 64 characters.' },
   { name: 'machine_id', type: 'string', required: true, description: 'Stable identifier of the machine running the app. At most 255 characters.' },
-  { name: 'product', type: 'string', description: 'App identifier. Recorded in the log; no longer checked against the license.' },
+  { name: 'product', type: 'string', description: 'App identifier. Must equal the product of the license when it has one; a license without a product accepts any app.' },
   { name: 'version', type: 'string', description: 'App version. Recorded in the log.' },
   { name: 'hostname', type: 'string', description: 'Machine hostname, shown in the license details.' },
   { name: 'os_info', type: 'string', description: 'Operating system description, shown in the license details.' },
@@ -109,7 +109,7 @@ const licenseFields: DocField[] = [
   { name: 'customer_name', type: 'string', required: true, description: 'Customer name.' },
   { name: 'customer_email', type: 'string', required: true, description: 'Customer contact email.' },
   { name: 'plan', type: 'string', description: 'A plan code from /admin/meta: starter, pro, enterprise or flat. Defaults to starter.' },
-  { name: 'product', type: 'string', description: 'App identifier, e.g. ryasai-chatbot. Kept for reference and used as the key prefix; not checked on validation.' },
+  { name: 'product', type: 'string', description: 'App identifier, e.g. ryasai-chatbot. Only that app can validate with the license. Omit or leave empty for a license that works with any app. Also sets the key prefix.' },
   { name: 'slug', type: 'string | null', description: 'Organisation slug in the downstream app. Renewals can address the license by it.' },
   { name: 'max_machines', type: 'integer', description: 'Machines that may be active at once, at least 1. Defaults to 1.' },
   { name: 'expires_at', type: 'string | null', description: 'ISO date or datetime (UTC unless it carries an offset). A date alone is valid through the end of that day, UTC. Omit or null for a lifetime license.' },
@@ -126,7 +126,7 @@ export const apiDocs: DocGroup[] = [
         path: '/api/v1/license/validate',
         summary: 'Validate a license key',
         description:
-          'Checks that the license exists, is not revoked, has not expired and has a free machine slot. ' +
+          'Checks that the license exists, is not revoked, is for the calling product, has not expired and has a free machine slot. ' +
           'Each machine_id has one record per license. A new machine_id coming from the IP of an active machine takes over that machine\'s slot (a recreated container); the machine it replaced is refused while its replacement keeps checking in. ' +
           'An active machine not seen for MACHINE_STALE_DAYS (30 by default) gives its slot back. ' +
           'A rejected license still returns 200 — read the valid field. ' +
@@ -150,7 +150,7 @@ export const apiDocs: DocGroup[] = [
           {
             status: 200,
             description:
-              'License rejected. message is one of: "License key not found.", "License has been deactivated.", "License has expired." (also returns expires_at), "Machine limit reached (N). Deactivate another machine first."',
+              'License rejected. message is one of: "License key not found.", "License has been deactivated.", "License not valid for this product.", "License has expired." (also returns expires_at), "Machine limit reached (N). Deactivate another machine first."',
             example: { nonce: validateExample.nonce, valid: false, message: 'License has been deactivated.', signature: '51d0…9b7c' },
           },
           validationError,
@@ -483,7 +483,7 @@ export const apiDocs: DocGroup[] = [
           { name: 'limit', type: 'number', description: 'Entries to return, 1 to 500. Defaults to 50.' },
           { name: 'offset', type: 'number', description: 'Entries to skip. Defaults to 0.' },
           { name: 'search', type: 'string', description: 'Only entries whose license key, machine id or IP address contains this text.' },
-          { name: 'result', type: 'string', description: 'Only this result code: valid, invalid, inactive, expired, machine_limit or wrong_product (old entries).' },
+          { name: 'result', type: 'string', description: 'Only this result code: valid, invalid, inactive, expired, machine_limit or wrong_product.' },
           { name: 'from', type: 'string', description: 'Only entries at or after this ISO date or datetime. A date alone is the start of that day, UTC.' },
           { name: 'to', type: 'string', description: 'Only entries at or before this ISO date or datetime. A date alone is the end of that day, UTC.' },
           { name: 'license_id', type: 'string', description: 'Only entries of this license.' },

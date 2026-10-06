@@ -109,7 +109,7 @@ function setMachineStatus(id: string, status: string) {
 const validateRequest = t.Object({
   license_key: t.String({ minLength: 1, maxLength: 64 }),
   machine_id: t.String({ minLength: 1, maxLength: 255 }),
-  product: t.Optional(t.String({ maxLength: 50 })), // legacy: recorded, no longer checked
+  product: t.Optional(t.String({ maxLength: 50 })), // the app identifying itself; must match a license that names a product
   version: t.Optional(t.String({ maxLength: 50 })),
   hostname: t.Optional(t.String({ maxLength: 200 })),
   os_info: t.Optional(t.String({ maxLength: 200 })),
@@ -176,8 +176,9 @@ export const licenseRoutes = new Elysia({ prefix: '/license' })
    *
    * Checks:
    * 1. License exists and its status allows validation
-   * 2. License not expired
-   * 3. Machine count within limit
+   * 2. License is for this product (when the license names one)
+   * 3. License not expired
+   * 4. Machine count within limit
    *
    * Response is Ed25519-signed (signature field) with nonce echoed back.
    */
@@ -213,6 +214,12 @@ export const licenseRoutes = new Elysia({ prefix: '/license' })
       if (!status?.allows_validation) {
         log(license.id, 'inactive')
         return resp({ valid: false, message: 'License has been deactivated.' })
+      }
+
+      // Check product match. A license without a product is good for any app.
+      if (license.product && license.product !== (body.product ?? '')) {
+        log(license.id, 'wrong_product')
+        return resp({ valid: false, message: 'License not valid for this product.' })
       }
 
       // Check expiry

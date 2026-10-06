@@ -15,34 +15,32 @@ const normalizeIp = (ip: string | undefined | null) => {
   return value.startsWith('::ffff:') ? value.slice(7) : value
 }
 
-let proxyWarningShown = false
-
 /**
  * Address of the client that sent the request.
  *
- * X-Forwarded-For can be written by anyone, so it is only read when TRUSTED_PROXY_HOPS says
- * how many proxies in front of this server appended to it: the entry that many places from
- * the right is the one the outermost trusted proxy saw. With no trusted proxy the socket
- * address is used.
+ * X-Forwarded-For can be written by anyone, so a client must not be able to pick its own
+ * address with it. The header is only believed for the part a trusted proxy wrote:
+ *
+ * - TRUSTED_PROXY_HOPS = N: N proxies in front of this server each appended the address they
+ *   saw, so the entry N places from the right is the client.
+ * - TRUSTED_PROXY_HOPS = 0: no proxy. The header is ignored; the socket address is the client.
+ * - Unset: detected per request. A connection from a loopback or private address is taken to be
+ *   a reverse proxy on this host or network, and its last entry is the client. A connection from
+ *   a public address is the client itself, whatever header it sent.
  */
 export function getClientIp(request: Request): string | null {
   const peer = normalizeIp(request.headers.get(PEER_ADDRESS_HEADER))
   const forwarded = (request.headers.get('x-forwarded-for') ?? '').split(',').map((part) => part.trim()).filter(Boolean)
+  const lastForwarded = normalizeIp(forwarded[forwarded.length - 1])
   const hops = settings.TRUSTED_PROXY_HOPS
 
-  if (hops > 0) return normalizeIp(forwarded[forwarded.length - hops]) ?? peer
+  if (hops !== null && hops > 0) return normalizeIp(forwarded[forwarded.length - hops]) ?? peer
 
   // Without the peer header (instrumentation not loaded) the right-most entry is the best there is:
   // Next.js fills the header in from the socket when the client did not send one
-  if (!peer) return normalizeIp(forwarded[forwarded.length - 1])
+  if (!peer) return lastForwarded
 
-  if (!proxyWarningShown && forwarded.length && normalizeIp(forwarded[forwarded.length - 1]) !== peer && isPrivateAddress(peer)) {
-    proxyWarningShown = true
-    console.warn(
-      `Requests carry X-Forwarded-For and arrive from ${peer}. If that is a reverse proxy, set TRUSTED_PROXY_HOPS=1 ` +
-        'so clients are told apart by their own address.',
-    )
-  }
+  if (hops === null && isPrivateAddress(peer)) return lastForwarded ?? peer
   return peer
 }
 

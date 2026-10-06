@@ -37,9 +37,10 @@ DATABASE_URL=./data/license.db
 # Comma-separated additional origins
 CORS_ORIGINS=
 
-# Reverse proxies (nginx, Caddy, ...) in front of this server. 0 = clients connect directly.
-# Behind one proxy this must be 1, or every client is seen as the proxy's address.
-TRUSTED_PROXY_HOPS=0
+# Reverse proxies (nginx, Caddy, ...) in front of this server that set X-Forwarded-For.
+# Empty = detect: the header is believed only when the connection comes from a local or
+# private address. Set 0 to never believe it, or the exact number of proxies to always do.
+TRUSTED_PROXY_HOPS=
 
 # An active machine not seen for this many days gives its slot back. 0 = never.
 MACHINE_STALE_DAYS=30
